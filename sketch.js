@@ -2,7 +2,7 @@
 //let cnv;
 
 //let video;
-let poseNet;
+//let poseNet;
 let poses = [];
 let vidH;
 let vidW;
@@ -19,14 +19,13 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   cnv = createCanvas(windowWidth, windowHeight);
   centerCanvas();
-  //frameRate(60);
 
-vidW = width;
-vidH = vidW * 480 / 640;
-vidY = -(vidH - height) / 2;
+  vidW = width;
+  vidH = vidW * 480 / 640;
+  vidY = -(vidH - height) / 2;
+
 
   video = createCapture(VIDEO);
-  //video.size(width, height);
   video.size(vidW, vidH);
 
   // Create a new poseNet method with a single detection
@@ -47,13 +46,12 @@ function modelReady() {
 function draw() {
   background(0);
 
-  // mirror camera
+  // mirror video feed
   translate(width, 0);
   scale(-1, 1);
 
-  translate(0, vidY); // recenter video
+  translate(0, vidY); // recenter video feed vertically
 
-  //image(video, 0, 0, width, height);
   image(video, 0, 0, vidW, vidH);
   //image(video, 0, -vidY, 640, 480);   // to test the cropping
 
@@ -73,9 +71,9 @@ function drawKeypoints()  {
       let keypoint = pose.keypoints[j];
       // Only draw an ellipse is the pose probability is bigger than 0.2
       if (keypoint.score > 0.2) {
-        fill(255, 0, 0);
+        fill(255);
         noStroke();
-        ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
+        ellipse(keypoint.position.x, keypoint.position.y, 20, 20);
       }
     }
   }
@@ -90,7 +88,8 @@ function drawSkeleton() {
     for (let j = 0; j < skeleton.length; j++) {
       let partA = skeleton[j][0];
       let partB = skeleton[j][1];
-      stroke(255, 0, 0);
+      stroke(255);
+      strokeWeight(4);
       line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
     }
   }
