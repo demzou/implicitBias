@@ -4,9 +4,10 @@
 //let video;
 //let poseNet;
 let poses = [];
-let vidH;
+let vidScale;
 let vidW;
-let vidY;
+let vidH;
+let vidTransY;
 
 function centerCanvas() {
   let x = (windowWidth - width) / 2;
@@ -15,15 +16,14 @@ function centerCanvas() {
 }
 
 function setup() {
-  //createCanvas(640, 480);
   createCanvas(windowWidth, windowHeight);
   cnv = createCanvas(windowWidth, windowHeight);
   centerCanvas();
 
-  vidW = width;
-  vidH = vidW * 480 / 640;
-  vidY = -(vidH - height) / 2;
-
+  vidW = 640;
+  vidH = 480;
+  vidScale = width / 640;
+  vidTransY = -(480 * vidScale - height) / 2;
 
   video = createCapture(VIDEO);
   video.size(vidW, vidH);
@@ -46,14 +46,15 @@ function modelReady() {
 function draw() {
   background(0);
 
+  // scale up full video feed and what is drawns on the canvas
+  translate(0, vidTransY); // recenter video feed vertically
+  scale(vidScale, vidScale);
+
   // mirror video feed
-  translate(width, 0);
+  translate(vidW,0);
   scale(-1, 1);
-
-  translate(0, vidY); // recenter video feed vertically
-
+  
   image(video, 0, 0, vidW, vidH);
-  //image(video, 0, -vidY, 640, 480);   // to test the cropping
 
   // We can call both functions to draw all keypoints and the skeletons
   drawKeypoints();
@@ -73,7 +74,7 @@ function drawKeypoints()  {
       if (keypoint.score > 0.2) {
         fill(255);
         noStroke();
-        ellipse(keypoint.position.x, keypoint.position.y, 20, 20);
+        ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
       }
     }
   }
@@ -89,7 +90,7 @@ function drawSkeleton() {
       let partA = skeleton[j][0];
       let partB = skeleton[j][1];
       stroke(255);
-      strokeWeight(4);
+      strokeWeight(2);
       line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
     }
   }
