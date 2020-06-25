@@ -5,6 +5,8 @@
 
 //let video;
 //let poseNet;
+let socket;
+let serverURL = 'http://localhost:3000/';
 let poses = [];
 let vidScale;
 let vidW = 640;
@@ -17,6 +19,11 @@ let startTime;
 let period = 10;
 let k = 0;
 let skeletonIsOn = false;
+let localMouseOn = false;
+let remoteMouseOn = false;
+let circleX;
+let circleY;
+
 
 function preload() {
   futura = loadFont('assets/Futura-CondensedExtraBold-05.ttf');
@@ -49,6 +56,24 @@ function setup() {
   // Hide the video element, and just show the canvas
   video.hide();
 
+  socket = io.connect(serverURL);
+
+  // Specify a function to call every time 'mouseclick'
+  // packets are received over the socket
+  socket.on("mouseclick", function(data) {
+    // When we receive data draw a blue circle
+    console.log("Got: " + data.status + " " + data.x + " " + data.y);
+    remoteMouseOn = data.status;
+    circleX = data.x;
+    circleY = data.y;
+
+    // fill(255);
+    // ellipse(data.x, data.y, 80, 80);
+
+    //console.log("Got in var: " + remoteMouseOn + " " + circleX + " " + cirlceY);
+
+  });
+
 }
 
 function modelReady() {
@@ -78,6 +103,14 @@ function draw() {
 
   if (currTime % period == 0) {
     k = floor(random(words.length));
+  }
+
+  if (remoteMouseOn == true) {
+    console.log("Got in var: " + remoteMouseOn + " " + circleX + " " + circleY);
+    push();
+    fill(0, 0, 255);
+    ellipse(circleX, circleY, 80, 80);
+    pop();
   }
 }
 
@@ -155,4 +188,30 @@ function keyPressed() {
   if (key === ' ') {
     skeletonIsOn = !skeletonIsOn;
   }
+}
+
+function mouseReleased() {
+  localMouseOn = false;
+  sendMouseData(localMouseOn, 10, 10);
+}
+
+function mouseDragged() {
+  localMouseOn = true;
+  // Send the mouse data to the server
+  sendMouseData(localMouseOn, mouseX, mouseY);
+}
+
+// Function for sending data to the socket
+function sendMouseData(mstatus, xpos, ypos) {
+  console.log("sent: " + mstatus + " " + xpos + " " + ypos);
+
+  // Make a JS object with the x and y data
+  const data = {
+    status: mstatus,
+    x: xpos,
+    y: ypos
+  };
+
+  // Send that object to the socket
+  socket.emit("mouseclick", data);
 }

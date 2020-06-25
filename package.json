@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "8.x"
+  },
+  "dependencies": {
+    "socket.io": "^2.3.0"
+  }
+}
