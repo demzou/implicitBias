@@ -77,6 +77,16 @@ io.sockets.on('connection',
         socket.broadcast.emit('mouseclick', data);
       }
     );
+
+    socket.on('rectangle',
+    function(data) {
+      // Data comes in as whatever was sent, including objects
+      console.log("Received: 'rectangle' " + data);
+    
+      // Send it to all other clients
+      socket.broadcast.emit('rectangle', data);
+    }
+  );
     
     // Specify a callback function to run when the client disconnects
     socket.on('disconnect',

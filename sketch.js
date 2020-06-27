@@ -3,10 +3,12 @@
 
 //let cnv;
 
+console.log(jeff);
+
 //let video;
 //let poseNet;
 let socket;
-let serverURL = 'http://localhost:3000/';
+const serverURL = 'https://implicit-bias.herokuapp.com/';
 let poses = [];
 let vidScale;
 let vidW = 640;
@@ -23,6 +25,7 @@ let localMouseOn = false;
 let remoteMouseOn = false;
 let circleX;
 let circleY;
+let rectangleOn = false;
 
 
 function preload() {
@@ -66,12 +69,11 @@ function setup() {
     remoteMouseOn = data.status;
     circleX = data.x;
     circleY = data.y;
+  });
 
-    // fill(255);
-    // ellipse(data.x, data.y, 80, 80);
-
-    //console.log("Got in var: " + remoteMouseOn + " " + circleX + " " + cirlceY);
-
+  socket.on("rectangle", function(data) {
+    console.log("Got: " + data);
+    rectangleOn = data;
   });
 
 }
@@ -112,6 +114,14 @@ function draw() {
     ellipse(circleX, circleY, 80, 80);
     pop();
   }
+
+  if (rectangleOn == true) {
+    push();
+    fill(0, 0, 255);
+    rect(width/2, height/2, 100, 100);
+    pop();
+  }
+
 }
 
 // A function to draw ellipses over the detected keypoints
