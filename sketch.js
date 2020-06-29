@@ -8,17 +8,15 @@ console.log(jeff);
 //let video;
 //let poseNet;
 let socket;
-const serverURL = 'https://implicit-bias.herokuapp.com/';
+//const serverURL = 'https://implicit-bias.herokuapp.com/';
+const serverURL = 'localhost:3000';
 let poses = [];
 let vidScale;
 let vidW = 640;
 let vidH = 480;
 let vidTransX;
-let words = ['LAZY', 'POOR', 'AGGRESSIVE', 'LOUD', 'ANGRY'];
+let word = 'HELLO!';
 let futura;
-let currTime;
-let startTime;
-let period = 10;
 let k = 0;
 let skeletonIsOn = false;
 let localMouseOn = false;
@@ -26,6 +24,7 @@ let remoteMouseOn = false;
 let circleX;
 let circleY;
 let rectangleOn = false;
+let targetPoint = 0; // default = 0 (nose)
 
 
 function preload() {
@@ -76,6 +75,17 @@ function setup() {
     rectangleOn = data;
   });
 
+  socket.on("word", function(data) {
+    console.log("Word received: " + data);
+    word = data;
+  });
+
+  socket.on("point", function(data) {
+    console.log("Target point received: " + data);
+    targetPoint = data;
+  });
+
+
 }
 
 function modelReady() {
@@ -83,7 +93,8 @@ function modelReady() {
 }
 
 function draw() {
-  currTime = second();
+
+  push();
   background(0);
 
   // scale up full video feed and what is drawns on the canvas
@@ -102,10 +113,8 @@ function draw() {
     drawKeypoints();
 }
   drawWord();
+  pop();
 
-  if (currTime % period == 0) {
-    k = floor(random(words.length));
-  }
 
   if (remoteMouseOn == true) {
     console.log("Got in var: " + remoteMouseOn + " " + circleX + " " + circleY);
@@ -178,7 +187,7 @@ function drawWord() {
       let keypoint = pose.keypoints[j];
       // Only draw if the pose probability is bigger than 0.2
       if (keypoint.score > 0.2) {
-        if (j == 0) {
+        if (j == targetPoint) {
           push();
             translate(2*keypoint.position.x,0);
             scale(-1, 1);
@@ -186,7 +195,7 @@ function drawWord() {
             textAlign(CENTER, CENTER);
             textFont(futura);
             textSize(40);
-            text(words[k], keypoint.position.x, keypoint.position.y);
+            text(word, keypoint.position.x, keypoint.position.y);
           pop();
         } 
       }

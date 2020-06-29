@@ -87,6 +87,26 @@ io.sockets.on('connection',
       socket.broadcast.emit('rectangle', data);
     }
   );
+
+  socket.on('word',
+  function(data) {
+    // Data comes in as whatever was sent, including objects
+    console.log("Received: 'word': " + data);
+  
+    // Send it to all other clients
+    socket.broadcast.emit('word', data);
+  }
+);
+
+socket.on('point',
+function(data) {
+  // Data comes in as whatever was sent, including objects
+  console.log("Received: 'target point': " + data);
+
+  // Send it to all other clients
+  socket.broadcast.emit('point', data);
+}
+);
     
     // Specify a callback function to run when the client disconnects
     socket.on('disconnect',
