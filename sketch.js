@@ -8,9 +8,10 @@ console.log(jeff);
 //let video;
 //let poseNet;
 let socket;
-const serverURL = 'https://implicit-bias.herokuapp.com/';
-//const serverURL = 'localhost:3000';
+//const serverURL = 'https://implicit-bias.herokuapp.com/';
+const serverURL = 'localhost:3000';
 let poses = [];
+let receivedPose;
 let vidScale;
 let vidW = 640;
 let vidH = 480;
@@ -25,6 +26,7 @@ let circleX;
 let circleY;
 let rectangleOn = false;
 let targetPoint = 0; // default = 0 (nose)
+let mode = 0;
 
 
 function preload() {
@@ -85,6 +87,16 @@ function setup() {
     targetPoint = data;
   });
 
+  socket.on("mode", function(data) {
+    console.log("Mode received: " + data);
+    mode = data;
+  });
+
+  socket.on("pose", function(data) {
+    console.log("Pose received: " + data);
+    receivedPose = data;
+  });
+
 
 }
 
@@ -107,12 +119,29 @@ function draw() {
 
   image(video, 0, 0, vidW, vidH);
 
-  // We can call both functions to draw all keypoints and the skeletons
-  if (skeletonIsOn) {
-    drawSkeleton();
-    drawKeypoints();
-}
+  if (mode == 0) {
+    // We can call both functions to draw all keypoints and the skeletons
+    if (skeletonIsOn) {
+      if (poses.length > 0){
+        drawSkeleton(poses[0], color(255));
+        drawKeypoints();
+      }
+    }
   drawWord();
+  receivedPose = poses[0];
+  }
+
+  if (mode == 1) {
+    if (poses.length > 0){
+      drawSkeleton(poses[0], color(255));
+    socket.emit("pose", poses[0]);
+    console.log(poses[0]);
+    }
+    if (receivedPose != 0){
+      drawSkeleton(receivedPose, color(255, 0, 0));
+    }
+  }
+
   pop();
 
 
@@ -130,6 +159,8 @@ function draw() {
     rect(width/2, height/2, 100, 100);
     pop();
   }
+
+
 
 }
 
@@ -157,19 +188,20 @@ function drawKeypoints()  {
 }
 
 // A function to draw the skeletons
-function drawSkeleton() {
+function drawSkeleton(_poses, _c) {
   // Loop through all the skeletons detected
-  for (let i = 0; i < poses.length; i++) {
-    let skeleton = poses[i].skeleton;
+  // for (let i = 0; i < _poses.length; i++) {
+  //   let skeleton = _poses[i].skeleton;
+    let skeleton = _poses.skeleton;
     // For every skeleton, loop through all body connections
     for (let j = 0; j < skeleton.length; j++) {
       let partA = skeleton[j][0];
       let partB = skeleton[j][1];
-      stroke(255);
+      stroke(_c);
       strokeWeight(2);
       line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
     }
-  }
+  //}
 }
 
 function windowResized() {

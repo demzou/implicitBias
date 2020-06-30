@@ -54,8 +54,79 @@ console.log('Server started on port ' + port); 
 
 // Setup sockets with the HTTP server
 const socketio = require('socket.io');
+const { match } = require('assert');
 let io = socketio.listen(server);
 console.log("Listening for socket connections");
+
+// PAIRING FUNCTIONS
+const clientPairs = []
+const unmatchedClients = []
+
+const matchClients = (id1, id2) => {
+  clientPairs.push({
+    id1, id2
+  })
+  console.log("pairs: " + clientPairs)
+}
+
+const newClient = (id) => {
+  unmatchedClients.push(id);
+  console.log("Umatched clients: " + unmatchedClients);
+  if (unmatchedClients.length >= 2) {
+    matchClients(unmatchedClients[0], unmatchedClients[1]);
+    unmatchedClients.splice(0,2);
+    console.log("Umatched clients: " + unmatchedClients)
+  }
+}
+
+const removeClient = (clientId) => {
+
+  // Check if client waiting in unmatched list
+  for (let i= 0; i < unmatchedClients.length; i++) {
+    if (unmatchedClients[i] === clientId) {
+      unmatchedClients.splice(i, 1);
+      console.log("Client removed from unmatched, new list: " + unmatchedClients)
+    }
+  }
+
+  // Check if part of a pair
+  // Then add other partner to unmatched list
+  // Then remove pair
+  for (let i= 0; i < clientPairs.length; i++){
+    if (clientPairs[i].id1 === clientId) {
+      unmatchedClients.push(clientPairs[i].id2);
+      clientPairs.splice(i,1);
+      console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
+
+    } else if (clientPairs[i].id2 === clientId){
+      unmatchedClients.push(clientPairs[i].id1);
+      clientPairs.splice(i,1);
+      console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
+
+    } else {
+      return
+    }
+  }
+
+}
+
+if (unmatchedClients.length > 2) {
+  matchClients(unmatchedClients[0], unmatchedClients[1]);
+  unmatchedClients.shift;
+  unmatchedClients.shift;
+}
+
+const partnerId = (clientId) => {
+  for (let i= 0; i < clientPairs.length; i++){
+    if (clientPairs[i].id1 === clientId) {
+      return clientPairs[i].id2
+    } else if (clientPairs[i].id2 === clientId){
+      return clientPairs[i].id1
+    } else {
+      return false
+    }
+  }
+} 
 
 
 // Register a callback function to run when we have an individual connection
@@ -64,14 +135,14 @@ io.sockets.on('connection',
   // Callback function to call whenever a socket connection is made
   function (socket) {
     // Print message to the console indicating that a new client has connected
-    console.log("We have a new client: " + socket.id);
- 
+    console.log("We have a new client: " + socket.id + " room: " + socket.rooms + " client: " + socket.client);
+    newClient(socket.id);
     // Specify a callback function to run every time we get a message of
     // type 'mousedata' from the client
     socket.on('mouseclick',
       function(data) {
         // Data comes in as whatever was sent, including objects
-        console.log("Received: 'mouseclick' " + data.status+ " " + data.x + " " + data.y);
+        console.log("Received: 'mouseclick' " + data.status+ " " + data.x + " " + data.y + " by " + socket.id);
       
         // Send it to all other clients
         socket.broadcast.emit('mouseclick', data);
@@ -105,13 +176,37 @@ function(data) {
 
   // Send it to all other clients
   socket.broadcast.emit('point', data);
-}
+  }
+);
+
+socket.on('mode',
+function(data) {
+  // Data comes in as whatever was sent, including objects
+  console.log("Received: 'mode': " + data);
+
+  // Send it to all other clients
+  socket.broadcast.emit('mode', data);
+  }
+);
+
+socket.on('pose',
+function(data) {
+  // Data comes in as whatever was sent, including objects
+  //console.log("Received: 'pose': " + data);
+  let receiverId = partnerId(socket.id);
+  if (receiverId != 0){
+  // Send it to other client in pair only
+  io.to(receiverId).emit('pose', data);
+    //socket.broadcast.emit('pose', data);
+  }
+ }
 );
     
     // Specify a callback function to run when the client disconnects
     socket.on('disconnect',
       function() {
-        console.log("Client has disconnected");
+        console.log("Client has disconnected - Socket: " + socket + " socket ID: " + socket.id);
+        removeClient(socket.id);
       }
     );
   }
