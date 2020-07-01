@@ -59,8 +59,8 @@ let io = socketio.listen(server);
 console.log("Listening for socket connections");
 
 // PAIRING FUNCTIONS
-const clientPairs = []
-const unmatchedClients = []
+let clientPairs = []
+let unmatchedClients = []
 
 const matchClients = (id1, id2) => {
   clientPairs.push({
@@ -211,8 +211,10 @@ function(data) {
   // Data comes in as whatever was sent, including objects
   console.log("Removing all pairs and unmatched users: " + data);
 
-  clientPairs = [];
-  unmatchedClients = [];
+    clientPairs = [];
+    unmatchedClients = [];
+
+
   console.log("Pairs: " + clientPairs);
   console.log("Unmatched: " + unmatchedClients);
 }
