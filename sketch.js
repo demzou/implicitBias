@@ -1,8 +1,8 @@
 // POSENET DOCUMENTATION
 // https://github.com/tensorflow/tfjs-models/tree/master/posenet
 
-//let cnv;
 
+let cnv;
 console.log(jeff);
 
 //let video;

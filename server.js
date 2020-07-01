@@ -88,12 +88,15 @@ const addUnmatchedClient = (id) => {
 const removeClient = (clientId) => {
 
   // Check if client waiting in unmatched list
-  for (let i= 0; i < unmatchedClients.length; i++) {
-    if (unmatchedClients[i] === clientId) {
-      unmatchedClients.splice(i, 1);
-      console.log("Client removed from unmatched, new list: " + unmatchedClients)
+  if (unmatchedClients.length > 0) {
+    for (let i= 0; i < unmatchedClients.length; i++) {
+      if (unmatchedClients[i] === clientId) {
+        unmatchedClients.splice(i, 1);
+        console.log("Client removed from unmatched, new list: " + unmatchedClients)
+        return
+      }
     }
-  }
+  } 
 
   // Check if part of a pair
   // Then add other partner to unmatched list
@@ -201,6 +204,15 @@ function(data) {
     //socket.broadcast.emit('pose', data);
   }
  }
+);
+
+socket.on('removePartners',
+function(data) {
+  // Data comes in as whatever was sent, including objects
+  console.log("Removing all pairs and unmatched users: " + data);
+
+  clientPairs = [];
+  unmatchedClients = [];
 );
     
     // Specify a callback function to run when the client disconnects
