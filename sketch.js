@@ -8,8 +8,8 @@ console.log(jeff);
 //let video;
 //let poseNet;
 let socket;
-//const serverURL = 'https://implicit-bias.herokuapp.com/';
-const serverURL = 'localhost:3000';
+const serverURL = 'https://implicit-bias.herokuapp.com/';
+//const serverURL = 'localhost:3000';
 let poses = [];
 let receivedPose;
 let vidScale;
@@ -27,6 +27,7 @@ let circleY;
 let rectangleOn = false;
 let targetPoint = 0; // default = 0 (nose)
 let mode = 0;
+let pairId;
 
 
 function preload() {
@@ -90,6 +91,7 @@ function setup() {
   socket.on("mode", function(data) {
     console.log("Mode received: " + data);
     mode = data;
+    
   });
 
   socket.on("pose", function(data) {
@@ -97,6 +99,10 @@ function setup() {
     receivedPose = data;
   });
 
+  socket.on("pairId", function(data) {
+    console.log("Pair ID: " + data);
+    pairId = data;
+  });
 
 }
 
@@ -132,6 +138,7 @@ function draw() {
   }
 
   if (mode == 1) {
+
     if (poses.length > 0){
       drawSkeleton(poses[0], color(255));
       drawKeypoints(poses[0], color(255));
@@ -142,13 +149,35 @@ function draw() {
       drawSkeleton(receivedPose, color(255, 0, 0));
       drawKeypoints(receivedPose, color(255, 0, 0));  
     }
+
+    pop();
+
+    push();
+
+    if (pairId == 1) {
+      fill(255);  // draw word in white
+      textAlign(CENTER, CENTER);
+      textFont(futura);
+      textSize(20);
+      text("-stand on the left-", mouseX, 40);
+      // fill(0, 0, 255);
+      // rect(width/4, height/2, 50, 50);
+    } else if (pairId == 2) {
+      fill(255);  // draw word in white
+      textAlign(CENTER, CENTER);
+      textFont(futura);
+      textSize(20);
+      text("-stand on the right-", 3*width/4, 40);
+      // fill(0, 0, 255);
+      // rect(width/4*3, height/2, 50, 50);
+    }
+    pop();
   }
 
-  pop();
+ 
 
 
   if (remoteMouseOn == true) {
-    console.log("Got in var: " + remoteMouseOn + " " + circleX + " " + circleY);
     push();
     fill(0, 0, 255);
     ellipse(circleX, circleY, 80, 80);
@@ -236,7 +265,32 @@ function drawWord() {
       }
     }
   }
-}
+ }
+
+// function connectPoints() {
+
+// poses
+
+//       for (let j = 0; j < pose.keypoints.length; j++) {
+//         // A keypoint is an object describing a body part (like rightArm or leftShoulder)
+//         let keypoint = pose.keypoints[j];
+//         // Only draw an ellipse is the pose probability is bigger than 0.2
+//         if (keypoint.score > 0.2) {
+//           if (j == 0) {
+//             fill(0);  // draw noise in black
+//           } else {
+//             fill(_c);
+//           }
+//           noStroke();
+//           ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
+//         }
+//       }
+
+
+
+
+
+// }
 
 function keyPressed() {
   if (key === ' ') {

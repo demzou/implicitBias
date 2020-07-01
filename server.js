@@ -67,6 +67,10 @@ const matchClients = (id1, id2) => {
     id1, id2
   })
   console.log("pairs: " + clientPairs)
+  let a = 1;
+  let b = 2;
+  io.to(id1).emit('pairId', a);
+  io.to(id2).emit('pairId', b);
 }
 
 const addUnmatchedClient = (id) => {
