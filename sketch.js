@@ -148,6 +148,7 @@ function draw() {
     if (receivedPose != 0){
       drawSkeleton(receivedPose, color(255, 0, 0));
       drawKeypoints(receivedPose, color(255, 0, 0));  
+      connectPoints();
     }
 
     pop();
@@ -155,22 +156,21 @@ function draw() {
     push();
 
     if (pairId == 1) {
-      fill(255);  // draw word in white
+      fill(255); 
       textAlign(CENTER, CENTER);
       textFont(futura);
       textSize(20);
-      text("-stand on the left-", mouseX, 40);
-      // fill(0, 0, 255);
-      // rect(width/4, height/2, 50, 50);
+      text("STAND ON THE LEFT", width/4, 40);
     } else if (pairId == 2) {
-      fill(255);  // draw word in white
+      fill(255); 
       textAlign(CENTER, CENTER);
       textFont(futura);
       textSize(20);
-      text("-stand on the right-", 3*width/4, 40);
-      // fill(0, 0, 255);
-      // rect(width/4*3, height/2, 50, 50);
+      text("STAND ON THE RIGHT", 3*width/4, 40);
     }
+    stroke(255, 100);
+    strokeWeight(2);
+    line(width/2, 0, width/2, height)
     pop();
   }
 
@@ -267,30 +267,34 @@ function drawWord() {
   }
  }
 
-// function connectPoints() {
+function connectPoints() {
 
-// poses
+  let point = 10;
+  let userPoint = 0;
+  let partnerPoint = 0;
 
-//       for (let j = 0; j < pose.keypoints.length; j++) {
-//         // A keypoint is an object describing a body part (like rightArm or leftShoulder)
-//         let keypoint = pose.keypoints[j];
-//         // Only draw an ellipse is the pose probability is bigger than 0.2
-//         if (keypoint.score > 0.2) {
-//           if (j == 0) {
-//             fill(0);  // draw noise in black
-//           } else {
-//             fill(_c);
-//           }
-//           noStroke();
-//           ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
-//         }
-//       }
+  if (pairId == 1) {
+    userPoint = point;
+    partnerPoint = point -1;
+  }
 
+  if (pairId == 2) {
+    userPoint = point -1;
+    partnerPoint = point;
+  }
 
+  let keypointUser = poses[0].pose.keypoints[userPoint];
+  let keypointPartner = receivedPose.pose.keypoints[partnerPoint];
 
+  fill(255, 255, 0);
+  ellipse(keypointUser.position.x, keypointUser.position.y, 20, 20);
+  ellipse(keypointPartner.position.x, keypointPartner.position.y, 20, 20);
 
+  stroke(255, 255, 0);
+  strokeWeight(4);
+  line(keypointUser.position.x, keypointUser.position.y, keypointPartner.position.x, keypointPartner.position.y);
 
-// }
+ }
 
 function keyPressed() {
   if (key === ' ') {
