@@ -213,6 +213,9 @@ function(data) {
 
   clientPairs = [];
   unmatchedClients = [];
+  console.log("Pairs: " + clientPairs);
+  console.log("Unmatched: " + unmatchedClients);
+}
 );
     
     // Specify a callback function to run when the client disconnects
