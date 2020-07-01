@@ -69,15 +69,17 @@ const matchClients = (id1, id2) => {
   console.log("pairs: " + clientPairs)
 }
 
-const newClient = (id) => {
+const addUnmatchedClient = (id) => {
   unmatchedClients.push(id);
   console.log("Umatched clients: " + unmatchedClients);
+
   if (unmatchedClients.length >= 2) {
     matchClients(unmatchedClients[0], unmatchedClients[1]);
     unmatchedClients.splice(0,2);
     console.log("Umatched clients: " + unmatchedClients)
   }
 }
+
 
 const removeClient = (clientId) => {
 
@@ -94,12 +96,12 @@ const removeClient = (clientId) => {
   // Then remove pair
   for (let i= 0; i < clientPairs.length; i++){
     if (clientPairs[i].id1 === clientId) {
-      unmatchedClients.push(clientPairs[i].id2);
+      addUnmatchedClient(clientPairs[i].id2);
       clientPairs.splice(i,1);
       console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
 
     } else if (clientPairs[i].id2 === clientId){
-      unmatchedClients.push(clientPairs[i].id1);
+      addUnmatchedClient(clientPairs[i].id1);
       clientPairs.splice(i,1);
       console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
 
@@ -110,11 +112,6 @@ const removeClient = (clientId) => {
 
 }
 
-if (unmatchedClients.length > 2) {
-  matchClients(unmatchedClients[0], unmatchedClients[1]);
-  unmatchedClients.shift;
-  unmatchedClients.shift;
-}
 
 const partnerId = (clientId) => {
   for (let i= 0; i < clientPairs.length; i++){
@@ -136,7 +133,7 @@ io.sockets.on('connection',
   function (socket) {
     // Print message to the console indicating that a new client has connected
     console.log("We have a new client: " + socket.id + " room: " + socket.rooms + " client: " + socket.client);
-    newClient(socket.id);
+    addUnmatchedClient(socket.id);
     // Specify a callback function to run every time we get a message of
     // type 'mousedata' from the client
     socket.on('mouseclick',

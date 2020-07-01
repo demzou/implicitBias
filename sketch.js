@@ -124,7 +124,7 @@ function draw() {
     if (skeletonIsOn) {
       if (poses.length > 0){
         drawSkeleton(poses[0], color(255));
-        drawKeypoints();
+        drawKeypoints(poses[0], color(255));
       }
     }
   drawWord();
@@ -134,11 +134,13 @@ function draw() {
   if (mode == 1) {
     if (poses.length > 0){
       drawSkeleton(poses[0], color(255));
-    socket.emit("pose", poses[0]);
-    console.log(poses[0]);
+      drawKeypoints(poses[0], color(255));
+      socket.emit("pose", poses[0]);
+      console.log(poses[0]);
     }
     if (receivedPose != 0){
       drawSkeleton(receivedPose, color(255, 0, 0));
+      drawKeypoints(receivedPose, color(255, 0, 0));  
     }
   }
 
@@ -165,11 +167,12 @@ function draw() {
 }
 
 // A function to draw ellipses over the detected keypoints
-function drawKeypoints()  {
+function drawKeypoints(_poses, _c)  {
   // Loop through all the poses detected
-  for (let i = 0; i < poses.length; i++) {
+  //for (let i = 0; i < poses.length; i++) {
     // For each pose detected, loop through all the keypoints
-    let pose = poses[i].pose;
+    //let pose = poses[i].pose;
+    let pose = _poses.pose;
     for (let j = 0; j < pose.keypoints.length; j++) {
       // A keypoint is an object describing a body part (like rightArm or leftShoulder)
       let keypoint = pose.keypoints[j];
@@ -178,13 +181,13 @@ function drawKeypoints()  {
         if (j == 0) {
           fill(0);  // draw noise in black
         } else {
-          fill(255);
+          fill(_c);
         }
         noStroke();
         ellipse(keypoint.position.x, keypoint.position.y, 10, 10);
       }
     }
-  }
+  //}
 }
 
 // A function to draw the skeletons
