@@ -3,13 +3,12 @@
 
 
 let cnv;
-console.log(jeff);
 
 //let video;
 //let poseNet;
 let socket;
-const serverURL = 'https://implicit-bias.herokuapp.com/';
-//const serverURL = 'localhost:3000';
+//const serverURL = 'https://implicit-bias.herokuapp.com/';
+const serverURL = 'localhost:3000';
 let poses = [];
 let receivedPose;
 let vidScale;
@@ -20,11 +19,6 @@ let word = 'HELLO!';
 let futura;
 let k = 0;
 let skeletonIsOn = false;
-let localMouseOn = false;
-let remoteMouseOn = false;
-let circleX;
-let circleY;
-let rectangleOn = false;
 let targetPoint = 0; // default = 0 (nose)
 let mode = 0;
 let pairId;
@@ -63,21 +57,6 @@ function setup() {
 
   socket = io.connect(serverURL);
 
-  // Specify a function to call every time 'mouseclick'
-  // packets are received over the socket
-  socket.on("mouseclick", function(data) {
-    // When we receive data draw a blue circle
-    console.log("Got: " + data.status + " " + data.x + " " + data.y);
-    remoteMouseOn = data.status;
-    circleX = data.x;
-    circleY = data.y;
-  });
-
-  socket.on("rectangle", function(data) {
-    console.log("Got: " + data);
-    rectangleOn = data;
-  });
-
   socket.on("word", function(data) {
     console.log("Word received: " + data);
     word = data;
@@ -95,7 +74,7 @@ function setup() {
   });
 
   socket.on("pose", function(data) {
-    console.log("Pose received: " + data);
+    //console.log("Pose received: " + data);
     receivedPose = data;
   });
 
@@ -134,21 +113,25 @@ function draw() {
       }
     }
   drawWord();
-  receivedPose = poses[0];
+
+  
   }
 
   if (mode == 1) {
 
-    if (poses.length > 0){
+    if (poses[0]){
       drawSkeleton(poses[0], color(255));
       drawKeypoints(poses[0], color(255));
       socket.emit("pose", poses[0]);
-      console.log(poses[0]);
+      //console.log(poses[0]);
     }
-    if (receivedPose != 0){
+    if (receivedPose){
       drawSkeleton(receivedPose, color(255, 0, 0));
       drawKeypoints(receivedPose, color(255, 0, 0));  
-      connectPoints();
+      if (poses[0]) {
+        connectPoints();
+      }
+      
     }
 
     pop();
@@ -173,25 +156,6 @@ function draw() {
     line(width/2, 0, width/2, height)
     pop();
   }
-
- 
-
-
-  if (remoteMouseOn == true) {
-    push();
-    fill(0, 0, 255);
-    ellipse(circleX, circleY, 80, 80);
-    pop();
-  }
-
-  if (rectangleOn == true) {
-    push();
-    fill(0, 0, 255);
-    rect(width/2, height/2, 100, 100);
-    pop();
-  }
-
-
 
 }
 
@@ -302,28 +266,3 @@ function keyPressed() {
   }
 }
 
-function mouseReleased() {
-  localMouseOn = false;
-  sendMouseData(localMouseOn, 10, 10);
-}
-
-function mouseDragged() {
-  localMouseOn = true;
-  // Send the mouse data to the server
-  sendMouseData(localMouseOn, mouseX, mouseY);
-}
-
-// Function for sending data to the socket
-function sendMouseData(mstatus, xpos, ypos) {
-  console.log("sent: " + mstatus + " " + xpos + " " + ypos);
-
-  // Make a JS object with the x and y data
-  const data = {
-    status: mstatus,
-    x: xpos,
-    y: ypos
-  };
-
-  // Send that object to the socket
-  socket.emit("mouseclick", data);
-}

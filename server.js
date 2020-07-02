@@ -3,6 +3,7 @@ const http = require('http');
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
+let mode = 0;
 
 // Callback function to handle requests
 function handleRequest(req, res) {
@@ -140,26 +141,16 @@ io.sockets.on('connection',
   function (socket) {
     // Print message to the console indicating that a new client has connected
     console.log("We have a new client: " + socket.id + " room: " + socket.rooms + " client: " + socket.client);
+    io.to(socket.id).emit('mode', mode);
     addUnmatchedClient(socket.id);
-    // Specify a callback function to run every time we get a message of
-    // type 'mousedata' from the client
-    socket.on('mouseclick',
-      function(data) {
-        // Data comes in as whatever was sent, including objects
-        console.log("Received: 'mouseclick' " + data.status+ " " + data.x + " " + data.y + " by " + socket.id);
-      
-        // Send it to all other clients
-        socket.broadcast.emit('mouseclick', data);
-      }
-    );
 
-    socket.on('rectangle',
-    function(data) {
-      // Data comes in as whatever was sent, including objects
-      console.log("Received: 'rectangle' " + data);
     
-      // Send it to all other clients
-      socket.broadcast.emit('rectangle', data);
+  socket.on('clientname',
+  function(data) {
+      if (data === 'iammax'){
+        console.log("Max is connected, removing...");
+        removeClient(socket.id);
+      }      
     }
   );
 
@@ -187,6 +178,7 @@ socket.on('mode',
 function(data) {
   // Data comes in as whatever was sent, including objects
   console.log("Received: 'mode': " + data);
+  mode = data;
 
   // Send it to all other clients
   socket.broadcast.emit('mode', data);
@@ -213,7 +205,6 @@ function(data) {
 
     clientPairs = [];
     unmatchedClients = [];
-
 
   console.log("Pairs: " + clientPairs);
   console.log("Unmatched: " + unmatchedClients);
