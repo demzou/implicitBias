@@ -4,6 +4,10 @@ const url = require('url');
 const path = require('path');
 const fs = require('fs');
 let mode = 0;
+let targetPoint = 0;
+let word = 'HELLO!';
+let pointPair1 = 0;
+let pointPair2 = 0;
 
 // Callback function to handle requests
 function handleRequest(req, res) {
@@ -67,7 +71,7 @@ const matchClients = (id1, id2) => {
   clientPairs.push({
     id1, id2
   })
-  console.log("pairs: " + clientPairs)
+  console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
   let a = 1;
   let b = 2;
   io.to(id1).emit('pairId', a);
@@ -76,12 +80,13 @@ const matchClients = (id1, id2) => {
 
 const addUnmatchedClient = (id) => {
   unmatchedClients.push(id);
-  console.log("Umatched clients: " + unmatchedClients);
 
   if (unmatchedClients.length >= 2) {
     matchClients(unmatchedClients[0], unmatchedClients[1]);
     unmatchedClients.splice(0,2);
-    console.log("Umatched clients: " + unmatchedClients)
+    console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
+  } else {
+    console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
   }
 }
 
@@ -93,7 +98,7 @@ const removeClient = (clientId) => {
     for (let i= 0; i < unmatchedClients.length; i++) {
       if (unmatchedClients[i] === clientId) {
         unmatchedClients.splice(i, 1);
-        console.log("Client removed from unmatched, new list: " + unmatchedClients)
+        console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
         return
       }
     }
@@ -104,16 +109,22 @@ const removeClient = (clientId) => {
   // Then remove pair
   for (let i= 0; i < clientPairs.length; i++){
     if (clientPairs[i].id1 === clientId) {
+      io.to(clientPairs[i].id2).emit('pairId', 0);
+      io.to(clientPairs[i].id2).emit('pose', 0);
       addUnmatchedClient(clientPairs[i].id2);
       clientPairs.splice(i,1);
-      console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
+      
+      console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
 
     } else if (clientPairs[i].id2 === clientId){
+      io.to(clientPairs[i].id1).emit('pairId', 0);
+      io.to(clientPairs[i].id1).emit('pose', 0);
       addUnmatchedClient(clientPairs[i].id1);
       clientPairs.splice(i,1);
-      console.log("Pair removed, new list: " + clientPairs + "Unmatched list: " + unmatchedClients)
+      console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
 
     } else {
+      console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
       return
     }
   }
@@ -140,8 +151,12 @@ io.sockets.on('connection',
   // Callback function to call whenever a socket connection is made
   function (socket) {
     // Print message to the console indicating that a new client has connected
-    console.log("We have a new client: " + socket.id + " room: " + socket.rooms + " client: " + socket.client);
+    console.log("We have a new client: " + socket.id);
     io.to(socket.id).emit('mode', mode);
+    io.to(socket.id).emit('point', targetPoint);
+    io.to(socket.id).emit('word', word);
+    io.to(socket.id).emit('pointPair1', pointPair1);
+    io.to(socket.id).emit('pointPair2', pointPair2);
     addUnmatchedClient(socket.id);
 
     
@@ -154,10 +169,25 @@ io.sockets.on('connection',
     }
   );
 
+  socket.on('speed',
+  function(data) {
+    console.log("Received: 'speed': " + data);
+    socket.broadcast.emit('speed', data);
+    }
+  );
+
+  socket.on('timer',
+  function(data) {
+    console.log("Received: 'timer': " + data);
+    socket.broadcast.emit('timer', data);
+    }
+  );
+
   socket.on('word',
   function(data) {
     // Data comes in as whatever was sent, including objects
     console.log("Received: 'word': " + data);
+    word = data;
   
     // Send it to all other clients
     socket.broadcast.emit('word', data);
@@ -168,9 +198,26 @@ socket.on('point',
 function(data) {
   // Data comes in as whatever was sent, including objects
   console.log("Received: 'target point': " + data);
+  targetPoint = data;
 
   // Send it to all other clients
   socket.broadcast.emit('point', data);
+  }
+);
+
+socket.on('pointPair1',
+function(data) {
+  console.log("Received: 'target point Pair 1': " + data);
+  pointPair1 = data;
+  socket.broadcast.emit('pointPair1', data);
+  }
+);
+
+socket.on('pointPair2',
+function(data) {
+  console.log("Received: 'target point Pair 2': " + data);
+  pointPair2 = data;
+  socket.broadcast.emit('pointPair2', data);
   }
 );
 
@@ -201,20 +248,20 @@ function(data) {
 socket.on('removePartners',
 function(data) {
   // Data comes in as whatever was sent, including objects
-  console.log("Removing all pairs and unmatched users: " + data);
+  console.log("Removing all pairs and unmatched users..");
 
-    clientPairs = [];
-    unmatchedClients = [];
+  clientPairs = [];
+  unmatchedClients = [];
 
-  console.log("Pairs: " + clientPairs);
-  console.log("Unmatched: " + unmatchedClients);
+  console.log("Total clients: " + (clientPairs.length*2 + unmatchedClients.length) + " Pairs: " + clientPairs.length + " Umatched : " + unmatchedClients.length)
+
 }
 );
     
     // Specify a callback function to run when the client disconnects
     socket.on('disconnect',
       function() {
-        console.log("Client has disconnected - Socket: " + socket + " socket ID: " + socket.id);
+        console.log("Client has disconnected - Socket ID: " + socket.id);
         removeClient(socket.id);
       }
     );
