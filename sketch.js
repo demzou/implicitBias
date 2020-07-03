@@ -267,7 +267,7 @@ function drawWord() {
           translate(2*keypoint.position.x,0);
           scale(-1, 1);
 
-          fill(0, 255, 255, 100);
+          fill(0, 100, 255, 100);
           noStroke();
           ellipse(keypoint.position.x, keypoint.position.y, 140, 140);
 
